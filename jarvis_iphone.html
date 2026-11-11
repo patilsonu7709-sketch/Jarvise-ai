@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#050b18">
+<title>JARVIS — Personal AI</title>
+<style>
+:root{color-scheme:dark;--cyan:#5ee7ff;--muted:#9bb2c8}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(circle at 50% 18%,#123451 0,#071426 38%,#030712 78%);color:#eaf8ff;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;min-height:100vh}
+main{max-width:720px;margin:auto;padding:24px 18px calc(30px + env(safe-area-inset-bottom))}
+header{text-align:center;padding:14px 0 20px}
+h1{letter-spacing:.24em;font-size:25px;margin:8px 0;color:var(--cyan);text-shadow:0 0 18px #25bde966}
+.sub{color:var(--muted);font-size:13px;letter-spacing:.12em}
+.core{width:170px;height:170px;margin:20px auto 22px;border:2px solid #53dfff;border-radius:50%;display:grid;place-items:center;box-shadow:0 0 18px #32d7ff66,inset 0 0 28px #32d7ff33;position:relative}
+.core:before,.core:after{content:"";position:absolute;border:1px solid #53dfff88;border-radius:50%;inset:12px}
+.core:after{inset:27px;border-style:dashed;animation:spin 18s linear infinite}
+.arc{font-size:49px;color:var(--cyan);text-shadow:0 0 22px #53dfff}
+@keyframes spin{to{transform:rotate(360deg)}}
+.panel{background:#08192bd9;border:1px solid #2b7895;border-radius:16px;padding:15px;margin:13px 0;box-shadow:0 8px 30px #0005}
+label{display:block;color:var(--muted);font-size:13px;margin-bottom:7px}
+input,textarea{width:100%;background:#04101e;color:white;border:1px solid #31566d;border-radius:10px;padding:12px;font:inherit}
+textarea{min-height:70px;resize:vertical}
+button{border:1px solid #4ddcff;background:#0a2a40;color:#eafaff;border-radius:11px;padding:12px 14px;font-size:15px;font-weight:600}
+button:active{transform:scale(.98)}
+.row{display:flex;gap:9px;flex-wrap:wrap}
+.row button{flex:1}
+.primary{background:linear-gradient(135deg,#087ca3,#075071);box-shadow:0 0 15px #29caff33}
+#status{color:var(--cyan);font-size:13px;min-height:20px;text-align:center}
+#chat{height:260px;overflow:auto;display:flex;flex-direction:column;gap:10px}
+.msg{padding:10px 12px;border-radius:12px;line-height:1.45;white-space:pre-wrap;overflow-wrap:anywhere}
+.user{background:#123b55;align-self:flex-end;max-width:90%}
+.bot{background:#0d2535;border:1px solid #20536b;align-self:flex-start;max-width:95%}
+.small{font-size:12px;color:var(--muted);line-height:1.5}
+a{color:var(--cyan)}
+</style>
+</head>
+<body>
+<main>
+<header>
+<div class="sub">PERSONAL ARTIFICIAL INTELLIGENCE</div>
+<h1>J.A.R.V.I.S.</h1>
+<div class="sub">JUST A RATHER VERY INTELLIGENT SYSTEM</div>
+<div class="core"><div class="arc">✧</div></div>
+<div id="status">SYSTEM READY · TAP THE MIC TO SPEAK</div>
+</header>
+
+<section class="panel">
+<label for="key">OpenAI API key (needed for AI replies)</label>
+<input id="key" type="password" autocomplete="off" placeholder="Paste your API key (sk-...)">
+<div class="small" style="margin-top:8px">Your key is kept only in this page's memory and is not saved. Do not share this page or your key. API usage may cost money separately from ChatGPT.</div>
+</section>
+
+<section class="panel">
+<label for="prompt">Speak or type a command</label>
+<textarea id="prompt" placeholder="Hello Jarvis... / नमस्ते जार्विस..."></textarea>
+<div class="row" style="margin-top:10px">
+<button class="primary" id="mic">🎙 Speak</button>
+<button class="primary" id="send">Send ↗</button>
+<button id="stop">Stop voice</button>
+</div>
+</section>
+
+<section class="panel">
+<label>Conversation</label>
+<div id="chat"><div class="msg bot">Good day. I am JARVIS. How may I assist you?</div></div>
+</section>
+
+<section class="panel">
+<label>Quick actions</label>
+<div class="row">
+<button data-action="time">🕒 Time & date</button>
+<button data-action="google">🔎 Google</button>
+<button data-action="youtube">▶ YouTube</button>
+</div>
+<div class="row" style="margin-top:9px">
+<button data-action="maps">📍 Maps</button>
+<button data-action="call">📞 Call</button>
+<button data-action="message">✉ Message</button>
+</div>
+<p class="small">Call and message actions open Apple's phone or Messages interface. You must choose/confirm the recipient and send yourself.</p>
+</section>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+const chat=$("chat");
+let recognition=null;
+function say(text){
+  if(!("speechSynthesis" in window)) return;
+  speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(text);
+  u.lang=/[\u0900-\u097F]/.test(text)?"hi-IN":"en-IN";
+  u.rate=1; speechSynthesis.speak(u);
+}
+function add(text,who){
+  const d=document.createElement("div");d.className="msg "+who;d.textContent=text;
+  chat.appendChild(d);chat.scrollTop=chat.scrollHeight;
+}
+function setStatus(s){$("status").textContent=s;}
+function quick(action){
+  if(action==="time"){
+    const s=new Date().toLocaleString("en-IN",{dateStyle:"full",timeStyle:"short"});
+    add(s,"bot");say(s);return;
+  }
+  if(action==="google"){location.href="https://www.google.com";return;}
+  if(action==="youtube"){location.href="https://www.youtube.com";return;}
+  if(action==="maps"){location.href="https://maps.apple.com";return;}
+  if(action==="call"){
+    const n=prompt("Enter phone number (include country code if needed):");
+    if(n) location.href="tel:"+n.replace(/[^\d+]/g,"");
+    return;
+  }
+  if(action==="message"){
+    const n=prompt("Enter phone number:");
+    if(n) location.href="sms:"+n.replace(/[^\d+]/g,"");
+  }
+}
+document.querySelectorAll("[data-action]").forEach(b=>b.addEventListener("click",()=>quick(b.dataset.action)));
+$("stop").onclick=()=>{speechSynthesis.cancel();setStatus("VOICE STOPPED");};
+$("mic").onclick=()=>{
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){setStatus("Speech recognition unavailable here. Please type your command.");return;}
+  try{
+    recognition=new SR();recognition.lang="hi-IN";recognition.interimResults=false;recognition.maxAlternatives=1;
+    recognition.onstart=()=>setStatus("LISTENING…");
+    recognition.onresult=e=>{$("prompt").value=e.results[0][0].transcript;setStatus("VOICE CAPTURED");};
+    recognition.onerror=e=>setStatus("MIC ERROR: "+e.error+" · You can type instead.");
+    recognition.onend=()=>{if($("status").textContent==="LISTENING…")setStatus("READY");};
+    recognition.start();
+  }catch(e){setStatus("Could not start microphone. Use typing instead.");}
+};
+$("send").onclick=async()=>{
+  const promptText=$("prompt").value.trim();if(!promptText)return;
+  add(promptText,"user");$("prompt").value="";
+  const key=$("key").value.trim();
+  const lower=promptText.toLowerCase();
+  if(/^(open|launch)\s+(google|youtube|maps)/i.test(promptText)){
+    const v=lower.includes("youtube")?"youtube":lower.includes("maps")?"maps":"google";quick(v);return;
+  }
+  if(/time|date|समय|तारीख/.test(lower)){quick("time");return;}
+  if(!key){const m="Please add your OpenAI API key above to enable AI answers. Quick actions work without it.";add(m,"bot");say(m);return;}
+  setStatus("THINKING…");
+  $("send").disabled=true;
+  try{
+    const res=await fetch("https://api.openai.com/v1/responses",{
+      method:"POST",
+      headers:{"Content-Type":"application/json","Authorization":"Bearer "+key},
+      body:JSON.stringify({model:"gpt-4.1-mini",input:"You are JARVIS, a helpful and concise personal assistant. Reply in the language the user uses (Hindi, English, or Hinglish). Be honest about iPhone limitations. User: "+promptText})
+    });
+    const data=await res.json();
+    if(!res.ok)throw new Error(data.error?.message||("API error "+res.status));
+    let answer=data.output_text;
+    if(!answer&&Array.isArray(data.output)){
+      answer=data.output.flatMap(x=>x.content||[]).filter(x=>x.type==="output_text").map(x=>x.text).join("\n");
+    }
+    answer=answer||"I received an empty response. Please try again.";
+    add(answer,"bot");say(answer);setStatus("READY");
+  }catch(e){
+    const msg="Sorry, I could not connect: "+e.message;
+    add(msg,"bot");setStatus("CONNECTION ERROR");
+  }finally{$("send").disabled=false;}
+};
+$("prompt").addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();$("send").click();}});
+</script>
+</body>
+</html>
